@@ -275,6 +275,15 @@ export class HomeAssistantLanguageService {
           continue;
         }
       }
+      
+      // yaml-language-server strips custom tags before validating, so a value such as
+      // `!include_dir_named packages` is checked as `packages`. Skip errors behind any include tag.
+      const textBeforeError = document.getText(
+        Range.create(startLine, 0, startLine, startChar),
+      );
+      if (/!include(_dir_(merge_)?(named|list))?\s+$/.test(textBeforeError)) {
+        continue;
+      }
 
       diagnosticItem.severity = 1; // Convert all warnings to errors
       diagnostics.push(diagnosticItem);
@@ -898,6 +907,11 @@ export class HomeAssistantLanguageService {
             }
             
             if (foundDeviceProperty) {
+              break;
+            }
+            // The nearest key above the list is not a device property (e.g. `identifiers:`
+            // inside an MQTT `device:` block) – these list items are not device IDs.
+            if (/^\s*[\w-]+\s*:\s*$/.test(prevLine)) {
               break;
             }
             currentLineIndex--;
