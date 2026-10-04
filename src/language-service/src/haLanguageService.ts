@@ -277,11 +277,12 @@ export class HomeAssistantLanguageService {
       }
       
       // yaml-language-server strips custom tags before validating, so a value such as
-      // `!include_dir_named packages` is checked as `packages`. Skip errors behind any include tag.
+      // `!include_dir_named packages` is checked as `packages`. Skip errors behind any include
+      // tag and behind `!env_var`, whose value is only known at runtime.
       const textBeforeError = document.getText(
         Range.create(startLine, 0, startLine, startChar),
       );
-      if (/!include(_dir_(merge_)?(named|list))?\s+$/.test(textBeforeError)) {
+      if (/!(include(_dir_(merge_)?(named|list))?|env_var)\s+$/.test(textBeforeError)) {
         continue;
       }
 
